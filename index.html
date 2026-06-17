@@ -237,7 +237,7 @@
     <script>
         // ！！！請替換為你的 GAS 網址 ！！！
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzux6h7rNY0MyzcGm3gCLs_m9Zw7JgYisjynJRufPDwsTMlnERizBzEw8WmyplLUeQKjQ/exec";
-        const BASE_DOMAIN = window.location.origin + window.location.pathname;
+        const BASE_DOMAIN = "https://a7club.github.io/u/";
 
         // 歷史紀錄儲存鍵值
         const STORAGE_KEY = "a7club_urls";
@@ -258,7 +258,7 @@
                     const urlParams = new URLSearchParams(window.location.search);
                     id = urlParams.get('id');
                 }
-            } else if (lastSegment && lastSegment !== 'index.html' && lastSegment !== 'url') {
+            } else if (lastSegment && lastSegment !== 'index.html' && lastSegment !== 'u') {
                 // 支援完全沒有問號的乾淨網址 (例如: /myticket)
                 id = lastSegment;
             }
@@ -353,10 +353,7 @@
 
                 if (result.status === "success") {
                     // 產生的新網址移除問號，使用乾淨的純斜線路徑
-                    let domain = BASE_DOMAIN.replace(/index\.html$/, '');
-                    if (!domain.endsWith('/')) domain += '/';
-                    const finalUrl = `${domain}${result.tag}`;
-
+                    const finalUrl = `${BASE_DOMAIN}${result.tag}`;
                     document.getElementById('shortUrl').value = finalUrl;
                     document.getElementById('resultArea').classList.remove('hidden');
                     
