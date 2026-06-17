@@ -6,9 +6,9 @@
     <title>柒樂部 | 專屬短網址 reURL</title>
     <meta name="description" content="提供在地住戶推薦的桃園龜山 A7 重劃區生活資訊。包含美食推薦、診所藥局、生活代辦及在地社群及建案地圖，讓住戶輕鬆掌握社區大小事。">
     <meta name="keywords" content="A7重劃區, 龜山美食, A7生活圈, 林口龜山, 桃園建案, 柒樂部">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 📊 Google Analytics (GA4)追蹤代碼放置區 -->
-    <!-- Google tag (gtag.js) -->
+    <meta property="og:image" content="https://raw.githubusercontent.com/A7Club/life/main/website.jpg">
+
+        <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-YJ9RJC2DRS"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -16,7 +16,10 @@
       gtag('js', new Date());
 
       gtag('config', 'G-YJ9RJC2DRS');
-    </script>    
+    </script>
+
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入黑體(內文)與明體(標題/文青感) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
@@ -231,22 +234,33 @@
         </div>
     </div>
 
-<script>
+    <script>
         // ！！！請替換為你的 GAS 網址 ！！！
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzux6h7rNY0MyzcGm3gCLs_m9Zw7JgYisjynJRufPDwsTMlnERizBzEw8WmyplLUeQKjQ/exec";
         const BASE_DOMAIN = window.location.origin + window.location.pathname;
 
+        // 歷史紀錄儲存鍵值
+        const STORAGE_KEY = "a7club_urls";
+
         window.onload = async () => {
             let id = null;
             const searchStr = window.location.search.substring(1);
+            // 抓取網址斜線後的最後一段路徑
+            const pathSegments = window.location.pathname.split('/').filter(p => p);
+            const lastSegment = pathSegments[pathSegments.length - 1];
             
             if (searchStr) {
+                // 優先解析不帶 "=" 的純小尾巴網址 (例如: ?myticket)
                 if (!searchStr.includes('=')) {
                     id = searchStr;
                 } else {
+                    // 相容舊有已發布的帶有 id 參數格式 (例如: ?id=myticket)
                     const urlParams = new URLSearchParams(window.location.search);
                     id = urlParams.get('id');
                 }
+            } else if (lastSegment && lastSegment !== 'index.html' && lastSegment !== 'url') {
+                // 支援完全沒有問號的乾淨網址 (例如: /myticket)
+                id = lastSegment;
             }
 
             if (id) {
@@ -269,8 +283,8 @@
                 const generatorUI = document.getElementById('generatorUI');
                 generatorUI.classList.remove('hidden');
                 generatorUI.classList.add('flex');
-                // 網頁載入時，直接向雲端抓取全部清單
-                fetchAllLinks(); 
+                renderHistory();
+                fetchClickStats();
             }
         };
 
@@ -282,6 +296,27 @@
                     <p class="text-[#5C5454] mb-8 font-bold bg-white px-6 py-2 rounded-lg shadow-sm border border-[#F0EAE1] font-serif">哎呀！這頁雜誌被撕掉了 🫧</p>
                     <a href="${BASE_DOMAIN}" class="bg-[#5C5454] text-white px-8 py-3 rounded-xl font-serif font-bold tracking-widest hover:bg-[#FFC2D1] transition-colors shadow-md">返回目錄</a>
                 </div>`;
+        }
+
+        // --- 自動抓取網頁標題的功能 ---
+        async function fetchTitleFallback(url) {
+            try {
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                const match = data.contents.match(/<title[^>]*>([^<]+)<\/title>/i);
+                if (match && match[1]) {
+                    const txt = document.createElement("textarea");
+                    txt.innerHTML = match[1];
+                    return txt.value.trim();
+                }
+            } catch (e) {
+                // 若抓取失敗則忽略
+            }
+            try {
+                return new URL(url).hostname;
+            } catch (e) {
+                return url;
+            }
         }
 
         const submitBtn = document.getElementById('submitBtn');
@@ -305,21 +340,27 @@
                 params.append('url', longUrl);
                 params.append('tag', tag);
 
-                const response = await fetch(GAS_API_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params 
-                });
+                const [response, pageTitle] = await Promise.all([
+                    fetch(GAS_API_URL, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: params 
+                    }),
+                    fetchTitleFallback(longUrl)
+                ]);
 
                 const result = await response.json();
 
                 if (result.status === "success") {
-                    const finalUrl = `${BASE_DOMAIN}?${result.tag}`;
+                    // 產生的新網址移除問號，使用乾淨的純斜線路徑
+                    let domain = BASE_DOMAIN.replace(/index\.html$/, '');
+                    if (!domain.endsWith('/')) domain += '/';
+                    const finalUrl = `${domain}${result.tag}`;
+
                     document.getElementById('shortUrl').value = finalUrl;
                     document.getElementById('resultArea').classList.remove('hidden');
                     
-                    // 產生成功後，重新抓取最新的全域列表
-                    fetchAllLinks();
+                    saveToHistory(result.tag, finalUrl, longUrl, pageTitle);
                 } else {
                     errorMsg.textContent = "※ " + (result.message || "發生了一點小錯誤 🥲");
                     errorMsg.classList.remove('hidden');
@@ -352,84 +393,63 @@
             }
         });
 
-        // --- 全域列表抓取邏輯 ---
-        document.getElementById('refreshStatsBtn').addEventListener('click', function() {
-            const btn = this;
-            btn.classList.add('opacity-50', 'pointer-events-none');
-            btn.querySelector('svg').classList.add('animate-spin');
-            fetchAllLinks().finally(() => {
-                btn.classList.remove('opacity-50', 'pointer-events-none');
-                btn.querySelector('svg').classList.remove('animate-spin');
-            });
-        });
+        // --- 歷史紀錄邏輯 ---
+        function getHistory() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
 
-        async function fetchAllLinks() {
+        function saveToHistory(tag, shortUrl, longUrl, pageTitle) {
+            let history = getHistory();
+            const exists = history.find(item => item.tag === tag);
+            if (!exists) {
+                history.unshift({ tag, shortUrl, longUrl, title: pageTitle, clicks: 0, date: new Date().toLocaleDateString() });
+                if(history.length > 10) history.pop(); 
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const history = getHistory();
             const listContainer = document.getElementById('historyList');
             const emptyState = document.getElementById('emptyHistory');
             const historyArea = document.getElementById('historyArea');
 
-            historyArea.classList.remove('hidden');
-            emptyState.classList.add('hidden');
-            listContainer.innerHTML = '<p class="text-center py-8 text-[#A69F98] text-sm font-bold font-serif">讀取資料中... ☁️</p>';
-
-            try {
-                const response = await fetch(`${GAS_API_URL}?action=getAll`);
-                const result = await response.json();
-                
-                if (result.status === "success") {
-                    renderGlobalList(result.data);
-                } else {
-                    listContainer.innerHTML = '<p class="text-center py-8 text-[#FFC2D1] text-sm font-bold font-serif">哎呀，讀取失敗了 🥲</p>';
-                }
-            } catch (error) {
-                console.log("Fetch error:", error);
-                listContainer.innerHTML = '<p class="text-center py-8 text-[#FFC2D1] text-sm font-bold font-serif">無法連線到資料庫 🥲</p>';
-            }
-        }
-
-        function renderGlobalList(history) {
-            const listContainer = document.getElementById('historyList');
-            const emptyState = document.getElementById('emptyHistory');
-
-            if (!history || history.length === 0) {
-                listContainer.innerHTML = '';
+            if (history.length === 0) {
                 emptyState.classList.remove('hidden');
+                historyArea.classList.remove('hidden');
                 return;
             }
 
+            historyArea.classList.remove('hidden');
             emptyState.classList.add('hidden');
             listContainer.innerHTML = '';
 
             history.forEach(item => {
-                const shortUrl = `${BASE_DOMAIN}?${item.tag}`;
                 const li = document.createElement('div');
                 li.className = "history-item p-4 rounded-xl flex items-center justify-between gap-4";
                 li.innerHTML = `
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-1">
                             <span class="text-[#FFC2D1] text-xs">🔗</span>
-                            <a href="${shortUrl}" target="_blank" class="text-sm font-black text-[#5C5454] hover:text-[#BDE0FE] truncate hover:underline font-serif">?${item.tag}</a>
-                            <button class="history-copy-btn text-[#A69F98] hover:text-[#E2CBF7] transition-colors focus:outline-none" title="複製短網址" data-url="${shortUrl}">
-                                <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <!-- 移除問號，改為顯示斜線或直接顯示小尾巴 -->
+                            <a href="${item.shortUrl}" target="_blank" class="text-sm font-black text-[#5C5454] hover:text-[#BDE0FE] truncate hover:underline font-serif">/${item.tag}</a>
+                            <button class="history-copy-btn text-[#A69F98] hover:text-[#E2CBF7] transition-colors focus:outline-none" title="複製短網址">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             </button>
                             <span class="text-[10px] bg-[#FFFDF9] text-[#A69F98] px-2 py-0.5 rounded border border-[#F0EAE1] ml-1">${item.date}</span>
                         </div>
-                        <p class="text-xs text-[#A69F98] truncate ml-5" title="${item.longUrl}">${item.longUrl}</p>
+                        <p class="text-xs text-[#A69F98] truncate ml-5" title="${item.longUrl}">${item.title || item.longUrl}</p>
                     </div>
                     <div class="flex flex-col items-center justify-center bg-[#FFFDF9] px-3 py-2 rounded-lg min-w-[55px]">
                         <span class="text-[9px] font-bold text-[#A69F98] tracking-widest uppercase mb-1">Hits</span>
-                        <span class="text-xl font-serif font-black text-[#BDE0FE] leading-none">${item.clicks}</span>
+                        <span class="text-xl font-serif font-black text-[#BDE0FE] leading-none" id="click-count-${item.tag}">${item.clicks || 0}</span>
                     </div>
                 `;
                 listContainer.appendChild(li);
-            });
 
-            // 綁定複製按鈕事件
-            document.querySelectorAll('.history-copy-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const urlToCopy = this.getAttribute('data-url');
+                const copyHistoryBtn = li.querySelector('.history-copy-btn');
+                copyHistoryBtn.addEventListener('click', function() {
                     const input = document.createElement('input');
-                    input.value = urlToCopy;
+                    input.value = item.shortUrl;
                     document.body.appendChild(input);
                     input.select();
                     try {
@@ -447,6 +467,36 @@
                     document.body.removeChild(input);
                 });
             });
+        }
+
+        document.getElementById('refreshStatsBtn').addEventListener('click', function() {
+            const btn = this;
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            btn.querySelector('svg').classList.add('animate-spin');
+            fetchClickStats().finally(() => {
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                btn.querySelector('svg').classList.remove('animate-spin');
+            });
+        });
+
+        async function fetchClickStats() {
+            const history = getHistory();
+            if (history.length === 0) return;
+            const tags = history.map(item => item.tag).join(',');
+            try {
+                const response = await fetch(`${GAS_API_URL}?action=stats&tags=${tags}`);
+                const result = await response.json();
+                if (result.status === "success" && result.data) {
+                    let updatedHistory = history.map(item => {
+                        if (result.data[item.tag] !== undefined) item.clicks = result.data[item.tag];
+                        return item;
+                    });
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+                    renderHistory();
+                }
+            } catch (error) {
+                console.log("Stats fetch error:", error);
+            }
         }
     </script>
 </body>
