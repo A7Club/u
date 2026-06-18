@@ -410,7 +410,7 @@
             });
         });
 
-        // 修改：從雲端抓取全部列表 (加入防快取與嚴謹的錯誤攔截)
+        // 修改：從雲端抓取全部列表 (加入更友善的畫面防呆提示)
         async function syncListFromServer() {
             try {
                 // 加上時間戳，防止瀏覽器快取到舊資料
@@ -442,6 +442,13 @@
                     }
                 } catch (parseError) {
                     console.warn("資料解析失敗！請確認 GAS 是否有『建立新版本』發布。後端回傳：", text);
+                    // 若解析失敗，在畫面上給予友善提示
+                    const emptyState = document.getElementById('emptyHistory');
+                    if (getHistory().length === 0) {
+                        emptyState.innerHTML = `連線雲端資料失敗 🥲<br><span class="text-xs font-normal text-[#A69F98] mt-2 inline-block">請回 GAS 點擊「管理部署作業」>「編輯」<br>將版本改為「建立新版本」後重新部署喔！</span>`;
+                        emptyState.classList.remove('hidden');
+                        document.getElementById('historyArea').classList.remove('hidden');
+                    }
                 }
             } catch (error) {
                 console.error("連線同步失敗:", error);
