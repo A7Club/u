@@ -410,31 +410,41 @@
             });
         });
 
-        // 修改：從雲端抓取全部列表
+        // 修改：從雲端抓取全部列表 (加入防快取與嚴謹的錯誤攔截)
         async function syncListFromServer() {
             try {
-                const response = await fetch(`${GAS_API_URL}?action=list`);
-                const result = await response.json();
-                if (result.status === "success" && result.data) {
-                    const localHistory = getHistory();
-                    const titleMap = {};
-                    
-                    localHistory.forEach(item => { if(item.title) titleMap[item.tag] = item.title; });
+                // 加上時間戳，防止瀏覽器快取到舊資料
+                const response = await fetch(`${GAS_API_URL}?action=list&t=${new Date().getTime()}`);
+                const text = await response.text(); 
+                
+                try {
+                    // 嘗試解析 JSON
+                    const result = JSON.parse(text);
+                    if (result.status === "success" && result.data) {
+                        const localHistory = getHistory();
+                        const titleMap = {};
+                        
+                        // 保留本地抓取到的標題，因為雲端只有存長網址
+                        localHistory.forEach(item => { if(item.title) titleMap[item.tag] = item.title; });
 
-                    const serverHistory = result.data.map(item => ({
-                        tag: item.tag,
-                        shortUrl: `${BASE_DOMAIN}${item.tag}`,
-                        longUrl: item.longUrl,
-                        title: titleMap[item.tag] || item.longUrl,
-                        clicks: item.clicks,
-                        date: item.date
-                    }));
+                        const serverHistory = result.data.map(item => ({
+                            tag: item.tag,
+                            shortUrl: `${BASE_DOMAIN}${item.tag}`, // 確保沒有 id=
+                            longUrl: item.longUrl,
+                            title: titleMap[item.tag] || item.longUrl,
+                            clicks: item.clicks,
+                            date: item.date
+                        }));
 
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(serverHistory));
-                    renderHistory();
+                        // 更新並重新渲染
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(serverHistory));
+                        renderHistory();
+                    }
+                } catch (parseError) {
+                    console.warn("資料解析失敗！請確認 GAS 是否有『建立新版本』發布。後端回傳：", text);
                 }
             } catch (error) {
-                console.log("Sync error:", error);
+                console.error("連線同步失敗:", error);
             }
         }
     </script>
