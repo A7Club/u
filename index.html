@@ -232,49 +232,58 @@
         // 歷史紀錄儲存鍵值
         const STORAGE_KEY = "a7club_urls";
 
-        // 改用 DOMContentLoaded 替代 window.onload，不等待圖片與字型載入即可提早觸發跳轉，大幅提升速度
-        document.addEventListener('DOMContentLoaded', async () => {
-            let id = null;
-            const searchStr = window.location.search.substring(1);
-            // 抓取網址斜線後的最後一段路徑
-            const pathSegments = window.location.pathname.split('/').filter(p => p);
-            const lastSegment = pathSegments[pathSegments.length - 1];
-            
-            if (searchStr) {
-                // 相容舊有已發布的問號格式
-                if (!searchStr.includes('=')) {
-                    id = searchStr;
-                } else {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    id = urlParams.get('id');
-                }
-            } else if (lastSegment && lastSegment !== 'index.html' && lastSegment !== 'u') {
-                // 支援完全沒有問號的乾淨網址 (例如: /myticket)
-                id = lastSegment;
+        // ==========================================
+        // 🚀 極速導轉優化：提早解析網址與啟動 API 請求
+        // ==========================================
+        let currentId = null;
+        const searchStr = window.location.search.substring(1);
+        // 抓取網址斜線後的最後一段路徑
+        const pathSegments = window.location.pathname.split('/').filter(p => p);
+        const lastSegment = pathSegments[pathSegments.length - 1];
+        
+        if (searchStr) {
+            // 相容舊有已發布的問號格式
+            if (!searchStr.includes('=')) {
+                currentId = searchStr;
+            } else {
+                const urlParams = new URLSearchParams(window.location.search);
+                currentId = urlParams.get('id');
             }
+        } else if (lastSegment && lastSegment !== 'index.html' && lastSegment !== 'u') {
+            // 支援完全沒有問號的乾淨網址 (例如: /myticket)
+            currentId = lastSegment;
+        }
 
-            if (id) {
+        // 🔥 不等待 DOM 畫面載入，立刻在背景發送驗證請求 (大幅減少等待時間)
+        let redirectPromise = null;
+        if (currentId) {
+            redirectPromise = fetch(`${GAS_API_URL}?id=${currentId}`).then(r => r.json()).catch(() => null);
+        }
+
+        // 改用 DOMContentLoaded 替代 window.onload，不等待圖片與字型載入即可提早觸發跳轉
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (currentId) {
                 const redirectUI = document.getElementById('redirectUI');
                 redirectUI.classList.remove('hidden');
                 redirectUI.classList.add('flex');
                 
-                try {
-                    const response = await fetch(`${GAS_API_URL}?id=${id}`);
-                    const result = await response.json();
-                    if (result.status === "success" && result.url) {
-                        window.location.replace(result.url);
+                if (redirectPromise) {
+                    const result = await redirectPromise;
+                    if (result && result.status === "success" && result.url) {
+                        // 使用 replace 直接取代歷史紀錄，返回時不會卡在轉跳頁
+                        window.location.replace(result.url); 
                     } else {
                         show404();
                     }
-                } catch (e) {
+                } else {
                     show404();
                 }
             } else {
                 const generatorUI = document.getElementById('generatorUI');
                 generatorUI.classList.remove('hidden');
                 generatorUI.classList.add('flex');
-                renderHistory();
-                fetchClickStats();
+                renderHistory(); // 先顯示本地快取
+                syncListFromServer(); // 接著從 Google Sheet 同步最新列表
             }
         });
 
@@ -388,7 +397,7 @@
             const exists = history.find(item => item.tag === tag);
             if (!exists) {
                 history.unshift({ tag, shortUrl, longUrl, title: pageTitle, clicks: 0, date: new Date().toLocaleDateString() });
-                if(history.length > 10) history.pop(); 
+                if(history.length > 30) history.pop(); // 支援顯示更多從雲端同步的項目
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
                 renderHistory();
             }
@@ -460,29 +469,41 @@
             const btn = this;
             btn.classList.add('opacity-50', 'pointer-events-none');
             btn.querySelector('svg').classList.add('animate-spin');
-            fetchClickStats().finally(() => {
+            syncListFromServer().finally(() => {
                 btn.classList.remove('opacity-50', 'pointer-events-none');
                 btn.querySelector('svg').classList.remove('animate-spin');
             });
         });
 
-        async function fetchClickStats() {
-            const history = getHistory();
-            if (history.length === 0) return;
-            const tags = history.map(item => item.tag).join(',');
+        // 🔄 改為「從雲端同步完整列表」
+        async function syncListFromServer() {
             try {
-                const response = await fetch(`${GAS_API_URL}?action=stats&tags=${tags}`);
+                const response = await fetch(`${GAS_API_URL}?action=list`);
                 const result = await response.json();
                 if (result.status === "success" && result.data) {
-                    let updatedHistory = history.map(item => {
-                        if (result.data[item.tag] !== undefined) item.clicks = result.data[item.tag];
-                        return item;
+                    const localHistory = getHistory();
+                    const titleMap = {};
+                    
+                    // 保留本地抓取到的標題記憶
+                    localHistory.forEach(item => {
+                        if(item.title) titleMap[item.tag] = item.title;
                     });
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+
+                    // 重新建構來自 Google Sheet 的最新清單 (抓最新 30 筆)
+                    const serverHistory = result.data.map(item => ({
+                        tag: item.tag,
+                        shortUrl: `${BASE_DOMAIN}${item.tag}`,
+                        longUrl: item.longUrl,
+                        title: titleMap[item.tag] || item.longUrl, // 如果本地沒記憶標題，則顯示長網址
+                        clicks: item.clicks,
+                        date: item.date
+                    }));
+
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(serverHistory));
                     renderHistory();
                 }
             } catch (error) {
-                console.log("Stats fetch error:", error);
+                console.log("Sync error:", error);
             }
         }
     </script>
