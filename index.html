@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>柒樂部 | 專屬短網址 reURL</title>
-    <meta name="description" content="提供在地住戶推薦的桃園龜山 A7 重劃區生活資訊。包含美食推薦、診所藥局、生活代辦及在地社群及建案地圖，讓住戶輕鬆掌握社區大小事。">
-    <meta name="keywords" content="A7重劃區, 龜山美食, A7生活圈, 林口龜山, 桃園建案, 柒樂部">
-    <meta property="og:image" content="https://raw.githubusercontent.com/A7Club/life/main/website.jpg">
+    <meta name="description" content="提供在地住戶推薦的桃園龜山 A7 重劃區生活資訊。">
     <!-- 加入預先連線，加速 GAS API 讀取速度 -->
     <link rel="preconnect" href="https://script.google.com">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入黑體(內文)與明體(標題/文青感) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -22,12 +19,11 @@
                 linear-gradient(90deg, #F0EAE1 1px, transparent 1px);
             background-size: 24px 24px;
             overflow-x: hidden; 
-            color: #5C5454; /* 溫柔深灰 */
+            color: #5C5454;
         }
 
         .font-serif { font-family: 'Noto Serif TC', serif; }
 
-        /* 馬卡龍色漂浮幾何 (粉紅、粉紫、Babyblue、粉黃) - 降低不透明度增加輕盈感 */
         .shape { position: absolute; z-index: -1; opacity: 0.6; animation: float 10s ease-in-out infinite; }
         .shape-circle { width: 180px; height: 180px; border-radius: 50%; background: #FFC2D1; top: 5%; left: -2%; filter: blur(8px); } 
         .shape-arch { width: 120px; height: 160px; border-radius: 60px 60px 0 0; background: #E2CBF7; bottom: 10%; right: 2%; animation-delay: 2s; transform: rotate(15deg); filter: blur(5px); } 
@@ -36,7 +32,6 @@
 
         @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(5deg); } }
 
-        /* 雜誌內頁主卡片 */
         .magazine-card {
             background: #FFFFFF;
             border-radius: 16px;
@@ -45,83 +40,42 @@
             border: 1px solid #F0EAE1;
         }
         
-        /* 手帳風紙膠帶裝飾 */
         .washi-tape {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%) rotate(-2deg);
-            width: 140px;
-            height: 32px;
-            background: rgba(255, 194, 209, 0.85); /* 粉紅紙膠帶 */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            z-index: 10;
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%) rotate(-2deg);
+            width: 140px; height: 32px; background: rgba(255, 194, 209, 0.85);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 10;
         }
-        .washi-tape::after {
-            content: ''; position: absolute; top: 0; right: -8px; width: 16px; height: 100%;
-            background: repeating-linear-gradient(45deg, transparent, transparent 2px, #FFFFFF 2px, #FFFFFF 4px);
-            opacity: 0.5;
-        }
-        .washi-tape::before {
-            content: ''; position: absolute; top: 0; left: -8px; width: 16px; height: 100%;
-            background: repeating-linear-gradient(-45deg, transparent, transparent 2px, #FFFFFF 2px, #FFFFFF 4px);
-            opacity: 0.5;
-        }
+        .washi-tape::after { content: ''; position: absolute; top: 0; right: -8px; width: 16px; height: 100%; background: repeating-linear-gradient(45deg, transparent, transparent 2px, #FFFFFF 2px, #FFFFFF 4px); opacity: 0.5; }
+        .washi-tape::before { content: ''; position: absolute; top: 0; left: -8px; width: 16px; height: 100%; background: repeating-linear-gradient(-45deg, transparent, transparent 2px, #FFFFFF 2px, #FFFFFF 4px); opacity: 0.5; }
 
-        /* 雜誌排版輸入框 */
-        .input-magazine {
-            background: #FFFDF9;
-            border: 2px dashed #E2CBF7; /* 粉紫虛線 */
-            transition: all 0.3s ease;
-        }
-        .input-magazine:focus {
-            border-color: #BDE0FE; /* Baby blue */
-            border-style: solid;
-            background: #FFFFFF;
-            box-shadow: 4px 4px 0 #BDE0FE; /* 復古錯位陰影 */
-        }
+        .input-magazine { background: #FFFDF9; border: 2px dashed #E2CBF7; transition: all 0.3s ease; }
+        .input-magazine:focus { border-color: #BDE0FE; border-style: solid; background: #FFFFFF; box-shadow: 4px 4px 0 #BDE0FE; }
 
-        /* 雜誌按鈕 */
-        .btn-magazine { 
-            background: #5C5454;
-            color: #FFFDF9;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1;
-        }
-        .btn-magazine::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #FFC2D1; z-index: -1; transition: transform 0.3s ease;
-            transform-origin: bottom right; transform: scale(1);
-            border-radius: inherit;
-        }
+        .btn-magazine { background: #5C5454; color: #FFFDF9; transition: all 0.3s ease; position: relative; z-index: 1; }
+        .btn-magazine::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #FFC2D1; z-index: -1; transition: transform 0.3s ease; transform-origin: bottom right; transform: scale(1); border-radius: inherit; }
         .btn-magazine:hover { color: #5C5454; border: 2px solid #5C5454; }
         .btn-magazine:hover::before { transform: scale(1.05) translate(-4px, -4px); }
         .btn-magazine:active { transform: translateY(2px); }
 
-        /* 歷史小卡 (拍立得感) */
-        .history-item {
-            background: #FFFFFF;
-            border: 1px solid #F0EAE1;
-            border-bottom: 3px solid #FFF1AC; /* 粉黃底邊 */
-            transition: all 0.2s ease;
-        }
+        .history-item { background: #FFFFFF; border: 1px solid #F0EAE1; border-bottom: 3px solid #FFF1AC; transition: all 0.2s ease; }
         .history-item:hover { transform: translateY(-2px) rotate(1deg); border-bottom-color: #BDE0FE; }
 
         .fade-in { animation: fadeIn 0.6s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 高光螢光筆效果 */
-        .highlight-blue {
-            background: linear-gradient(180deg, transparent 60%, rgba(189, 224, 254, 0.6) 60%);
-        }
+        /* 簡約連續漸層光軸 (前進感) */
+        @keyframes gradientSweep { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+        .animate-gradient-sweep { animation: gradientSweep 2s linear infinite; }
+        
+        /* 優雅呼吸燈縮放 */
+        @keyframes pulseSoft { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+        .animate-pulse-soft { animation: pulseSoft 2s ease-in-out infinite; }
 
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-12 px-4 relative">
 
-    <!-- 馬卡龍漂浮裝飾 -->
     <div class="shape shape-circle"></div>
     <div class="shape shape-arch"></div>
     <div class="shape shape-pill"></div>
@@ -129,13 +83,10 @@
 
     <!-- 1. 產生器 UI -->
     <main id="generatorUI" class="w-full max-w-lg z-10 hidden flex-col gap-8 my-auto">
-        
-        <!-- 主要生成卡片 -->
         <div class="magazine-card mt-4">
-            <div class="washi-tape"></div> <!-- 紙膠帶裝飾 -->
+            <div class="washi-tape"></div>
             
             <div class="p-8 sm:p-10">
-                <!-- 雜誌 Header 排版 -->
                 <div class="flex justify-between items-end border-b-2 border-dashed border-[#F0EAE1] pb-5 mb-8">
                     <div>
                         <p class="font-serif text-[#FFC2D1] font-bold text-xs tracking-[0.2em] uppercase mb-1">A7club / Url Shortener</p>
@@ -149,16 +100,12 @@
 
                 <div class="space-y-6">
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-[#5C5454] font-serif tracking-wider">
-                            <span class="text-[#BDE0FE] mr-1">●</span>原始長網址
-                        </label>
+                        <label class="block text-sm font-bold text-[#5C5454] font-serif tracking-wider"><span class="text-[#BDE0FE] mr-1">●</span>原始長網址</label>
                         <input type="url" id="longUrl" placeholder="https://..." class="input-magazine w-full px-5 py-4 rounded-xl outline-none font-medium text-sm text-[#5C5454]">
                     </div>
 
                     <div class="space-y-2">
-                        <label class="block text-sm font-bold text-[#5C5454] font-serif tracking-wider">
-                            <span class="text-[#FFF1AC] mr-1">●</span>專屬小尾巴 (選填)
-                        </label>
+                        <label class="block text-sm font-bold text-[#5C5454] font-serif tracking-wider"><span class="text-[#FFF1AC] mr-1">●</span>專屬小尾巴 (選填)</label>
                         <input type="text" id="customTag" placeholder="my-cute-link" class="input-magazine w-full px-5 py-4 rounded-xl outline-none font-medium text-sm text-[#5C5454]">
                     </div>
 
@@ -169,7 +116,6 @@
                     </button>
                 </div>
 
-                <!-- 單次生成結果展示 -->
                 <div id="resultArea" class="hidden mt-8 pt-6 border-t-2 border-dashed border-[#F0EAE1] fade-in">
                     <p class="text-sm font-bold text-[#5C5454] mb-3 font-serif"><span class="highlight-blue">🧸 網址製作完成！</span></p>
                     <div class="flex items-center gap-2 bg-[#FFFDF9] p-2 rounded-xl border border-[#F0EAE1]">
@@ -178,21 +124,14 @@
                     </div>
                 </div>
                 
-                <!-- 雜誌底部條碼裝飾 -->
                 <div class="mt-8 pt-4 flex justify-center opacity-40">
                     <div class="w-32 h-6 border-x-4 border-[#5C5454] flex justify-between px-1">
-                        <div class="w-1 h-full bg-[#5C5454]"></div>
-                        <div class="w-0.5 h-full bg-[#5C5454]"></div>
-                        <div class="w-2 h-full bg-[#5C5454]"></div>
-                        <div class="w-1 h-full bg-[#5C5454]"></div>
-                        <div class="w-0.5 h-full bg-[#5C5454]"></div>
-                        <div class="w-1 h-full bg-[#5C5454]"></div>
+                        <div class="w-1 h-full bg-[#5C5454]"></div><div class="w-0.5 h-full bg-[#5C5454]"></div><div class="w-2 h-full bg-[#5C5454]"></div><div class="w-1 h-full bg-[#5C5454]"></div><div class="w-0.5 h-full bg-[#5C5454]"></div><div class="w-1 h-full bg-[#5C5454]"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 歷史紀錄列表區塊 -->
         <div id="historyArea" class="magazine-card p-6 sm:p-8 hidden fade-in">
             <h2 class="text-lg font-black text-[#5C5454] font-serif mb-5 flex items-center justify-between border-b-2 border-[#FFF1AC] pb-2 inline-flex w-full">
                 <span>🎫 管理員通行證列表</span>
@@ -201,26 +140,35 @@
                     更新
                 </button>
             </h2>
-            <div id="historyList" class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                <!-- 列表項目將透過 JS 動態生成 -->
-            </div>
-            <div id="emptyHistory" class="text-center py-8 text-[#A69F98] text-sm font-bold font-serif">
-                尚未收藏任何網址哦 🫧
-            </div>
+            <div id="historyList" class="space-y-4 max-h-[300px] overflow-y-auto pr-2"></div>
+            <div id="emptyHistory" class="text-center py-8 text-[#A69F98] text-sm font-bold font-serif">尚未收藏任何網址哦 🫧</div>
         </div>
     </main>
 
-    <!-- 2. 導轉中 UI -->
-    <div id="redirectUI" class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-[#FFFDF9]/90 backdrop-blur-sm">
-        <div class="text-center fade-in">
-            <div class="mb-6 relative inline-block">
-                 <div class="animate-spin-slow absolute inset-0 rounded-full border-4 border-dashed border-[#BDE0FE] opacity-50" style="animation: spin 4s linear infinite;"></div>
-                 <div class="bg-white p-8 rounded-full shadow-lg relative border border-[#F0EAE1]">
-                    <span class="text-5xl inline-block" style="animation: bounce 2s infinite;">☁️</span>
-                 </div>
+    <!-- 2. 導轉中 UI (極簡乾淨版，加入前進感) -->
+    <div id="redirectUI" class="fixed inset-0 z-50 hidden flex-col items-center justify-center bg-[#FFFDF9]/95 backdrop-blur-md transition-all duration-500">
+        <div class="text-center fade-in w-full max-w-xs px-6 relative z-10">
+            
+            <!-- 簡約紙飛機/指南針圖示 -->
+            <div class="flex justify-center mb-8">
+                <!-- 將原本帶有紫色的陰影與邊框，改為低飽和的日系灰階 -->
+                <div class="relative w-20 h-20 bg-[#FFFDF9] rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(92,84,84,0.06)] border border-[#EBE6E0]">
+                    <!-- 旋轉的柔和灰階光環 -->
+                    <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-[#A69F98] border-r-[#EAE3D9] animate-spin" style="animation-duration: 1.8s;"></div>
+                    <!-- 中心紙飛機圖示 (無印風低飽和灰) -->
+                    <svg class="w-8 h-8 text-[#8C857E] animate-pulse-soft ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </div>
             </div>
-            <h2 class="text-2xl font-black tracking-widest text-[#5C5454] font-serif">帶您前往目的地</h2>
-            <p class="text-xs text-[#A69F98] mt-3 font-bold tracking-[0.2em] uppercase">Redirecting...</p>
+            
+            <h2 class="text-xl font-black tracking-widest text-[#5C5454] font-serif mb-3">前往目的地</h2>
+            
+            <!-- 優雅的連續漸層進度條 (前進感) -->
+            <div class="w-full bg-[#F0EAE1]/50 rounded-full h-1.5 mb-5 overflow-hidden">
+                <div class="h-full w-full rounded-full bg-gradient-to-r from-[#BDE0FE] via-[#FFC2D1] to-[#E2CBF7] animate-gradient-sweep" style="background-size: 200% auto;"></div>
+            </div>
+
+            <!-- 動態狀態文字 -->
+            <p id="loadingText" class="text-xs text-[#A69F98] font-bold tracking-[0.2em] font-serif">讀取中...</p>
         </div>
     </div>
 
@@ -228,64 +176,65 @@
         // ！！！請替換為你的 GAS 網址 ！！！
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzux6h7rNY0MyzcGm3gCLs_m9Zw7JgYisjynJRufPDwsTMlnERizBzEw8WmyplLUeQKjQ/exec";
         const BASE_DOMAIN = "https://a7club.github.io/u/";
-
-        // 歷史紀錄儲存鍵值
         const STORAGE_KEY = "a7club_urls";
 
-        // ==========================================
-        // 🚀 極速導轉優化：提早解析網址與啟動 API 請求
-        // ==========================================
-        let currentId = null;
-        const searchStr = window.location.search.substring(1);
-        // 抓取網址斜線後的最後一段路徑
-        const pathSegments = window.location.pathname.split('/').filter(p => p);
-        const lastSegment = pathSegments[pathSegments.length - 1];
-        
-        if (searchStr) {
-            // 相容舊有已發布的問號格式
-            if (!searchStr.includes('=')) {
-                currentId = searchStr;
-            } else {
-                const urlParams = new URLSearchParams(window.location.search);
-                currentId = urlParams.get('id');
+        window.onload = async () => {
+            let id = null;
+            const searchStr = window.location.search.substring(1);
+            const pathSegments = window.location.pathname.split('/').filter(p => p);
+            const lastSegment = pathSegments[pathSegments.length - 1];
+            
+            if (searchStr) {
+                if (!searchStr.includes('=')) {
+                    id = searchStr;
+                } else {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    id = urlParams.get('id');
+                }
+            } else if (lastSegment && lastSegment !== 'index.html' && lastSegment !== 'u') {
+                id = lastSegment;
             }
-        } else if (lastSegment && lastSegment !== 'index.html' && lastSegment !== 'u') {
-            // 支援完全沒有問號的乾淨網址 (例如: /myticket)
-            currentId = lastSegment;
-        }
 
-        // 🔥 不等待 DOM 畫面載入，立刻在背景發送驗證請求 (大幅減少等待時間)
-        let redirectPromise = null;
-        if (currentId) {
-            redirectPromise = fetch(`${GAS_API_URL}?id=${currentId}`).then(r => r.json()).catch(() => null);
-        }
-
-        // 改用 DOMContentLoaded 替代 window.onload，不等待圖片與字型載入即可提早觸發跳轉
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (currentId) {
+            if (id) {
+                // 開啟導轉畫面
                 const redirectUI = document.getElementById('redirectUI');
                 redirectUI.classList.remove('hidden');
                 redirectUI.classList.add('flex');
                 
-                if (redirectPromise) {
-                    const result = await redirectPromise;
-                    if (result && result.status === "success" && result.url) {
-                        // 使用 replace 直接取代歷史紀錄，返回時不會卡在轉跳頁
-                        window.location.replace(result.url); 
+                // --- 新增：啟動極簡文字動態輪播 ---
+                const loadingTexts = ["正在連線目的地...", "讀取專屬通行證...", "準備開啟新視窗...", "即將抵達..."];
+                let textIndex = 0;
+                const textElement = document.getElementById('loadingText');
+                const textInterval = setInterval(() => {
+                    textIndex = (textIndex + 1) % loadingTexts.length;
+                    textElement.textContent = loadingTexts[textIndex];
+                }, 600); // 每 0.6 秒切換一次文字，增加速度感
+                
+                try {
+                    // 等待 API 回傳長網址
+                    const response = await fetch(`${GAS_API_URL}?id=${id}`);
+                    const result = await response.json();
+                    
+                    clearInterval(textInterval); // 停止文字輪播
+                    
+                    if (result.status === "success" && result.url) {
+                        window.location.replace(result.url); // 自動跳轉
                     } else {
                         show404();
                     }
-                } else {
+                } catch (e) {
+                    clearInterval(textInterval);
                     show404();
                 }
             } else {
+                // 沒有 id，進入產生器畫面
                 const generatorUI = document.getElementById('generatorUI');
                 generatorUI.classList.remove('hidden');
                 generatorUI.classList.add('flex');
-                renderHistory(); // 先顯示本地快取
-                syncListFromServer(); // 接著從 Google Sheet 同步最新列表
+                renderHistory(); // 顯示本地快取
+                syncListFromServer(); // 同步雲端資料
             }
-        });
+        };
 
         function show404() {
             document.body.innerHTML = `
@@ -297,7 +246,6 @@
                 </div>`;
         }
 
-        // --- 自動抓取網頁標題的功能 ---
         async function fetchTitleFallback(url) {
             try {
                 const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
@@ -308,14 +256,8 @@
                     txt.innerHTML = match[1];
                     return txt.value.trim();
                 }
-            } catch (e) {
-                // 若抓取失敗則忽略
-            }
-            try {
-                return new URL(url).hostname;
-            } catch (e) {
-                return url;
-            }
+            } catch (e) {}
+            try { return new URL(url).hostname; } catch (e) { return url; }
         }
 
         const submitBtn = document.getElementById('submitBtn');
@@ -351,8 +293,7 @@
                 const result = await response.json();
 
                 if (result.status === "success") {
-                    // 產生的新網址移除問號，使用乾淨的純斜線路徑
-                    const finalUrl = `${BASE_DOMAIN}${result.tag}`;
+                    const finalUrl = `${BASE_DOMAIN}${result.tag}`; // 乾淨網址
                     document.getElementById('shortUrl').value = finalUrl;
                     document.getElementById('resultArea').classList.remove('hidden');
                     
@@ -384,12 +325,9 @@
                     this.classList.replace('bg-[#BDE0FE]', 'bg-[#E2CBF7]');
                     this.classList.replace('hover:bg-[#a5d2fa]', 'hover:bg-[#d4b5f2]');
                 }, 2000);
-            } catch (err) {
-                console.error('Copy failed');
-            }
+            } catch (err) { console.error('Copy failed'); }
         });
 
-        // --- 歷史紀錄邏輯 ---
         function getHistory() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
 
         function saveToHistory(tag, shortUrl, longUrl, pageTitle) {
@@ -397,7 +335,7 @@
             const exists = history.find(item => item.tag === tag);
             if (!exists) {
                 history.unshift({ tag, shortUrl, longUrl, title: pageTitle, clicks: 0, date: new Date().toLocaleDateString() });
-                if(history.length > 30) history.pop(); // 支援顯示更多從雲端同步的項目
+                if(history.length > 30) history.pop(); 
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
                 renderHistory();
             }
@@ -426,7 +364,6 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-1">
                             <span class="text-[#FFC2D1] text-xs">🔗</span>
-                            <!-- 移除問號，改為顯示斜線或直接顯示小尾巴 -->
                             <a href="${item.shortUrl}" target="_blank" class="text-sm font-black text-[#5C5454] hover:text-[#BDE0FE] truncate hover:underline font-serif">/${item.tag}</a>
                             <button class="history-copy-btn text-[#A69F98] hover:text-[#E2CBF7] transition-colors focus:outline-none" title="複製短網址">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
@@ -457,9 +394,7 @@
                             this.innerHTML = originalHTML; 
                             this.classList.add('hover:text-[#E2CBF7]');
                         }, 2000);
-                    } catch (err) {
-                        console.error('Copy failed');
-                    }
+                    } catch (err) {}
                     document.body.removeChild(input);
                 });
             });
@@ -475,7 +410,7 @@
             });
         });
 
-        // 🔄 改為「從雲端同步完整列表」
+        // 修改：從雲端抓取全部列表
         async function syncListFromServer() {
             try {
                 const response = await fetch(`${GAS_API_URL}?action=list`);
@@ -484,17 +419,13 @@
                     const localHistory = getHistory();
                     const titleMap = {};
                     
-                    // 保留本地抓取到的標題記憶
-                    localHistory.forEach(item => {
-                        if(item.title) titleMap[item.tag] = item.title;
-                    });
+                    localHistory.forEach(item => { if(item.title) titleMap[item.tag] = item.title; });
 
-                    // 重新建構來自 Google Sheet 的最新清單 (抓最新 30 筆)
                     const serverHistory = result.data.map(item => ({
                         tag: item.tag,
                         shortUrl: `${BASE_DOMAIN}${item.tag}`,
                         longUrl: item.longUrl,
-                        title: titleMap[item.tag] || item.longUrl, // 如果本地沒記憶標題，則顯示長網址
+                        title: titleMap[item.tag] || item.longUrl,
                         clicks: item.clicks,
                         date: item.date
                     }));
