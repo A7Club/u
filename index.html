@@ -7,18 +7,8 @@
     <meta name="description" content="提供在地住戶推薦的桃園龜山 A7 重劃區生活資訊。包含美食推薦、診所藥局、生活代辦及在地社群及建案地圖，讓住戶輕鬆掌握社區大小事。">
     <meta name="keywords" content="A7重劃區, 龜山美食, A7生活圈, 林口龜山, 桃園建案, 柒樂部">
     <meta property="og:image" content="https://raw.githubusercontent.com/A7Club/life/main/website.jpg">
-
-        <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YJ9RJC2DRS"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-YJ9RJC2DRS');
-    </script>
-
-    
+    <!-- 加入預先連線，加速 GAS API 讀取速度 -->
+    <link rel="preconnect" href="https://script.google.com">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入黑體(內文)與明體(標題/文青感) -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
@@ -242,7 +232,8 @@
         // 歷史紀錄儲存鍵值
         const STORAGE_KEY = "a7club_urls";
 
-        window.onload = async () => {
+        // 改用 DOMContentLoaded 替代 window.onload，不等待圖片與字型載入即可提早觸發跳轉，大幅提升速度
+        document.addEventListener('DOMContentLoaded', async () => {
             let id = null;
             const searchStr = window.location.search.substring(1);
             // 抓取網址斜線後的最後一段路徑
@@ -250,11 +241,10 @@
             const lastSegment = pathSegments[pathSegments.length - 1];
             
             if (searchStr) {
-                // 優先解析不帶 "=" 的純小尾巴網址 (例如: ?myticket)
+                // 相容舊有已發布的問號格式
                 if (!searchStr.includes('=')) {
                     id = searchStr;
                 } else {
-                    // 相容舊有已發布的帶有 id 參數格式 (例如: ?id=myticket)
                     const urlParams = new URLSearchParams(window.location.search);
                     id = urlParams.get('id');
                 }
@@ -286,7 +276,7 @@
                 renderHistory();
                 fetchClickStats();
             }
-        };
+        });
 
         function show404() {
             document.body.innerHTML = `
